@@ -30,7 +30,7 @@
  * 4. PB4 will be connected to the output of the LM358 opamp (pin 7),
  *    with the actual analog input from the shunt resistor connected to
  *    the opamp's non-inverting input (pin 5), and the two resistors
- *    Rf (100K) and R1 (1K) connected as follows:
+ *    Rf (10K) and R1 (1K) connected as follows:
  *    - R1 is between inverting input (pin 6) and GND.
  *    - Rf is between output (pin 7) and inverting input (pin 6).
  *
@@ -135,7 +135,9 @@ int readVcc()
     long result = (high<<8) | low;  // Can this return 0? I hope not.
     // result = 1125300L / result; // Calculate Vcc (in mV);
     //                             // 1125300 = 1.1*1023*1000
-    result = 981496 / result; // Calculate Vcc (in mV);
+    result = 981496 / result; // Calculate Vcc (in mV); actual values
+                              // for my ATtiny85 after calibrating
+                              // measurements.
     return int(result); // Vcc in millivolts
 }
 
@@ -287,8 +289,9 @@ void loop()
     for(i=0; i<no; i++) {
         lower_bound = scale[i].volt;
         upper_bound = scale[i+1].volt;
-        // We got a measurement above the largest sample...
-        // Use the slant of the last step.
+        // If we get a measurement above the largest sample,
+        // then use the slant of the last step. Otherwise
+        // pick the matching measurement "window" from our samples above.
         if ((v_ADC_average_f >= lower_bound &&
              v_ADC_average_f <= upper_bound) || (i == no-1))
         {
@@ -308,6 +311,7 @@ void loop()
 
     delay(250);
     if (cnt++ == 100) {
+        // Go to sleep - and wake up when our user hits the RESET button.
         u8x8.setPowerSave(true);
         sleep_enable();
         sleep_cpu();
