@@ -32,7 +32,7 @@ tags:	${ALL_SRC}
 	ctags -R . ${USER_LIBS} ${USER_BASE}
 
 clean:
-	rm -rf ${BUILD_DIR} build.log
+	rm -rf ${BUILD_DIR} build.log tags
 
 upload:	${ELF}
 	avrdude -C/home/ttsiod/.arduino15/packages/arduino/tools/avrdude/6.3.0-arduino9/etc/avrdude.conf -v -pattiny85 -cstk500v1 -P/dev/ttyUSB0 -b19200 -Uflash:w:${HEX}:i
