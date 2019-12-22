@@ -311,16 +311,36 @@ void loop()
 
     {
         Emiter line;
-        line.printString("SAMPLES ");
-        line.printInt(cnt, false /* unsigned */, true /* padded */, 3 /* padwidth */);
-        line.printString("/100");
+        line.printString("SAMPLES     ");
+        line.printInt(cnt);
+        line.printString("/5");
     }
 
     delay(250);
-    if (cnt++ == 100) {
-        // Go to sleep - and wake up when our user hits the RESET button.
-        u8x8.setPowerSave(true);
-        sleep_enable();
-        sleep_cpu();
+    if (cnt++ == 5) {
+        int n = 9;
+        int sleepTenTimes = 10;
+
+        cnt = 0; // Reset for next time
+
+        // Go to sleep - and wake up after 8x10 ~= 80 seconds.
+        u8x8.setPowerSave(true); // Lights off, OLED
+        while(sleepTenTimes--) {
+            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+            // Enable the watchdog timer, set at 8 seconds
+            WDTCR = 1<<WDIE | (n & 0x8)<<2 | 1<<WDE | (n & 0x7);
+            sleep_enable();
+            sleep_cpu();
+            // After waking up, repeat this sleeping loop 10 times;
+            // in total, sleep around 80 seconds
+        }
+        // Re-enable the screen, go do normal operatios
+        u8x8.setPowerSave(false);
     }
+}
+
+ISR(WDT_vect) {
+    // When we wake up, disable watchdog timer
+    WDTCR = 1<<WDCE | 1<<WDE;
+    WDTCR = 0;
 }
