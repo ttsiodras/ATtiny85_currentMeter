@@ -3,6 +3,8 @@ CURRENT_DIR := $(patsubst %/,%,$(dir ${MKFILE_PATH}))
 BUILD_DIR := ${CURRENT_DIR}/tmp
 
 SRC:=Attiny85CurrentMeter.ino
+ALL_SRC:=$(wildcard *.ino *.h)
+
 ELF:=tmp/${SRC}.elf
 HEX:=tmp/${SRC}.hex
 
@@ -22,22 +24,21 @@ ARDUINO_BUILDER_OPTS=${HARDWARE} ${TOOLS} ${LIBRARIES}
 ARDUINO_BUILDER_OPTS+=-fqbn=${BOARD} ${WARNINGS}
 ARDUINO_BUILDER_OPTS+=-verbose -build-path ${BUILD_DIR} 
 
-all:
+${ELF}:	${ALL_SRC}
 	@mkdir -p ${BUILD_DIR}
 	arduino-builder -compile ${ARDUINO_BUILDER_OPTS} ${SRC} 2>&1 | tee build.log
 
-tags:
+tags:	${ALL_SRC}
 	ctags -R . ${USER_LIBS} ${USER_BASE}
 
 clean:
 	rm -rf ${BUILD_DIR} build.log
 
-upload:	all
+upload:	${ELF}
 	avrdude -C/home/ttsiod/.arduino15/packages/arduino/tools/avrdude/6.3.0-arduino9/etc/avrdude.conf -v -pattiny85 -cstk500v1 -P/dev/ttyUSB0 -b19200 -Uflash:w:${HEX}:i
 	avr-size ${ELF}
 
-stats:
+stats:	${ELF}
 	avr-nm --print-size -t d ${ELF} \
 	    | c++filt | sort -n -k 2 | awk '{a+=$$2; print a " " $$0;}' | grep -v u8x8
 	avr-size ${ELF}
-
