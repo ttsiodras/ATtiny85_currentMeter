@@ -45,8 +45,20 @@ stats:	${ELF}  ## Show stats about the built binary
 	    | c++filt | sort -n -k 2 | awk '{a+=$$2; print a " " $$0;}' | grep -v u8x8 | tail -20
 	avr-size ${ELF}
 
-.PHONY: help clean stats
-
 help: ## Display this help section
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 .DEFAULT_GOAL := help
+
+define newline # a literal \n
+
+
+endef
+
+# Makefile debugging trick:
+# call print-VARIABLE to see the runtime value of any variable
+# (hardened a bit against some special characters appearing in the output)
+print-%:
+	@echo '$*=$(subst ','\'',$(subst $(newline),\n,$($*)))'
+
+.PHONY: help clean stats print-*
+
