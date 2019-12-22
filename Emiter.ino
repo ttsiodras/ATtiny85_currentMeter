@@ -1,14 +1,6 @@
 #include "Emiter.h"
 
-//////////////////////////////////////////////////////////////
-// Optimizing for size...
-//////////////////////////////////////////////////////////////
-// I need to cleanup the msgBuf with spaces everytime I print,
-// to avoid having to cleanup the entire screen every time.
-//
-// Initially I just used my SAFE_PRINTF macro to emit a memset
-// followed by a drawString; but that meant I was wasting `.text`
-// space, of which the tiny brain of ATtiny85 has only 8K of...
+#include "globals.h"
 
 void Emiter::printChar(char c) 
 {
@@ -79,6 +71,7 @@ Emiter::~Emiter()
         msgBuf[columnNo++] = ' ';
     msgBuf[sizeof(msgBuf)-1] = 0;
     u8x8.drawString(0, lineNo++, msgBuf);
+    mySerial.println(msgBuf);
     columnNo = 0;
 }
 

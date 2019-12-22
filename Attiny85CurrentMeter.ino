@@ -15,7 +15,7 @@
  * 2. The battery output goes to VCC, and we will be using VCC as
  *    the reference voltage. We use 1.1V internal reference trickery
  *    (see getVcc below) to make proper ADC measurements regardless
- *    of the battery voltage dropping.
+ *    of whatever drop in battery voltage.
  *
  * 3. ADC will be using 10bit resolution, using ADC2 for input (PB4).
  *    For more information, see table 17.5 "ADC Prescaler Selections" in
@@ -33,6 +33,9 @@
  *    Rf (10K) and R1 (1K) connected as follows:
  *    - R1 is between inverting input (pin 6) and GND.
  *    - Rf is between output (pin 7) and inverting input (pin 6).
+ *
+ * 5. A SW send-only serial is placed on PB3 (setup in globals.h)
+ *    and set to 115200 baud (see 'setup' below)
  *
  * 6. Finally, the I2C OLED display is connected to the SCL/PB2 and
  *    SDA/PB1 pins (i.e. pins 7 and 6).
@@ -70,6 +73,11 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(PB2, PB1, PB0);
 ////////////////////////////////
 #include <avr/sleep.h>
 
+#include "globals.h"
+
+////////////////////////////////////////////
+// Emiter class automates information output
+////////////////////////////////////////////
 #include "Emiter.h"
 
 ////////////////////////////////////////////////
@@ -116,7 +124,7 @@ int printVcc()
     int vcc = readVcc();
     int voltage1 = vcc / 1000;
     int voltage2 = vcc % 1000; // (((float)vcc / 1000) - voltage1) * 1000;
-    
+
     Emiter line;
     line.printString("VCC      ");
     line.printInt(voltage1);
@@ -128,6 +136,8 @@ int printVcc()
 
 void setup()
 {
+    mySerial.begin(115200);
+
     // Setup our screen and font (Go Alan Sugar, go!)
     u8x8.begin();
     u8x8.setFont(u8x8_font_amstrad_cpc_extended_u);
