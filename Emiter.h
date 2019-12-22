@@ -6,9 +6,6 @@ struct Emiter {
     static int lineNo;
     static unsigned columnNo;
 
-    // Clear buffer with spaces
-    Emiter();
-
     // Emit constant string
     void printString(const char *src);
 
@@ -25,9 +22,6 @@ struct Emiter {
     void printChar(char c);
 
     // Draw final string
-    void flush();
-    void reset();
-
     ~Emiter();
 };
 

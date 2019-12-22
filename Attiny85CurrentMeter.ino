@@ -111,19 +111,18 @@ int readVcc()
     return int(result); // Vcc in millivolts
 }
 
-int printVcc(Emiter& line)
+int printVcc()
 {
     int vcc = readVcc();
     int voltage1 = vcc / 1000;
     int voltage2 = vcc % 1000; // (((float)vcc / 1000) - voltage1) * 1000;
     
-    line.reset();
+    Emiter line;
     line.printString("VCC      ");
     line.printInt(voltage1);
     line.printChar('.');
     line.printInt(voltage2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
     line.printChar('V');
-    line.flush();
     return vcc;
 }
 
@@ -193,8 +192,7 @@ void loop()
     }
 
     Emiter::lineNo = 0; // Reset screen placement.
-    Emiter line;
-    int vcc = printVcc(line);
+    int vcc = printVcc();
 
     // vcc is in millivolts, ditto for v_ADC_average then:
     float v_ADC_average_f = float(vcc)*v_ADC_total/float(samples);
@@ -202,13 +200,14 @@ void loop()
     int v1 = v_ADC_average / 1000;
     int v2 = v_ADC_average % 1000;
 
-    line.reset();
-    line.printString("V_SHUNT  ");
-    line.printInt(v1);
-    line.printChar('.');
-    line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
-    line.printChar('V');
-    line.flush();
+    {
+        Emiter line;
+        line.printString("V_SHUNT  ");
+        line.printInt(v1);
+        line.printChar('.');
+        line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+        line.printChar('V');
+    }
 
     // Henceforth, in Volt:
     v_ADC_average_f /= 1000.0;
@@ -291,19 +290,21 @@ void loop()
     v1 = currentAvg / 1000;
     v2 = currentAvg % 1000;
 
-    line.reset();
-    line.printString("CURRENT  ");
-    line.printInt(v1);
-    line.printChar('.');
-    line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
-    line.printChar('A');
-    line.flush();
+    {
+        Emiter line;
+        line.printString("CURRENT  ");
+        line.printInt(v1);
+        line.printChar('.');
+        line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+        line.printChar('A');
+    }
 
-    line.reset();
-    line.printString("SAMPLES ");
-    line.printInt(cnt, false /* unsigned */, true /* padded */, 3 /* padwidth */);
-    line.printString("/100");
-    line.flush();
+    {
+        Emiter line;
+        line.printString("SAMPLES ");
+        line.printInt(cnt, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+        line.printString("/100");
+    }
 
     delay(250);
     if (cnt++ == 100) {

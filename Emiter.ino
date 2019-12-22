@@ -10,15 +10,6 @@
 // followed by a drawString; but that meant I was wasting `.text`
 // space, of which the tiny brain of ATtiny85 has only 8K of...
 
-Emiter::Emiter() {
-    reset();
-}
-
-void Emiter::reset()
-{
-    columnNo = 0;
-}
-
 void Emiter::printChar(char c) 
 {
     if (columnNo < sizeof(msgBuf)-1)
@@ -83,11 +74,6 @@ void Emiter::printInt(
 }
 
 Emiter::~Emiter()
-{
-    // flush();
-}
-
-void Emiter::flush()
 {
     while(columnNo < sizeof(msgBuf))
         msgBuf[columnNo++] = ' ';
