@@ -2,7 +2,7 @@
 #define __EMITER_H__
 
 struct Emiter {
-    static char msgBuf[32];
+    static char msgBuf[16];
     static int lineNo;
     static unsigned columnNo;
 

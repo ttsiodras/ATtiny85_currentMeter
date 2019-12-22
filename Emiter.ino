@@ -9,11 +9,6 @@
 // Initially I just used my SAFE_PRINTF macro to emit a memset
 // followed by a drawString; but that meant I was wasting `.text`
 // space, of which the tiny brain of ATtiny85 has only 8K of...
-//
-// So instead of going full varargs, I used compile-time cpp-based
-// __VA_ARGS__, coupled with constructor/destructor semantics
-// that are re-using the same memset/drawString calls every time.
-// 2.7%  improvement in .text usage :-)
 
 Emiter::Emiter() {
     reset();
@@ -21,8 +16,6 @@ Emiter::Emiter() {
 
 void Emiter::reset()
 {
-    memset(msgBuf, ' ', sizeof(msgBuf));
-    msgBuf[sizeof(msgBuf) - 1] = '\0';
     columnNo = 0;
 }
 
@@ -37,7 +30,6 @@ void Emiter::printString(const char *src)
     size_t i, n=sizeof(msgBuf)-columnNo-1;
     for (i=0; i<n && src[i] != '\0'; i++)
         msgBuf[columnNo + i] = src[i];
-    msgBuf[columnNo + i] = '\0';
     columnNo += i;
 }
 
@@ -97,11 +89,13 @@ Emiter::~Emiter()
 
 void Emiter::flush()
 {
+    while(columnNo < sizeof(msgBuf))
+        msgBuf[columnNo++] = ' ';
     msgBuf[sizeof(msgBuf)-1] = 0;
     u8x8.drawString(0, lineNo++, msgBuf);
     columnNo = 0;
 }
 
-char Emiter::msgBuf[32] = {0};
+char Emiter::msgBuf[16] = {0};
 int Emiter::lineNo = 0;
 unsigned Emiter::columnNo = 0;
