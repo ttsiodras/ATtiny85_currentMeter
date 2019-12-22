@@ -24,21 +24,29 @@ ARDUINO_BUILDER_OPTS=${HARDWARE} ${TOOLS} ${LIBRARIES}
 ARDUINO_BUILDER_OPTS+=-fqbn=${BOARD} ${WARNINGS}
 ARDUINO_BUILDER_OPTS+=-verbose -build-path ${BUILD_DIR} 
 
+binary:	${ELF}  ## Build the binary.
+
 ${ELF}:	${ALL_SRC}
 	@mkdir -p ${BUILD_DIR}
 	arduino-builder -compile ${ARDUINO_BUILDER_OPTS} ${SRC} 2>&1 | tee build.log
 
-tags:	${ALL_SRC}
+tags:	${ALL_SRC}  ## Create tags for fast navigation
 	ctags -R . ${USER_LIBS} ${USER_BASE}
 
-clean:
+clean:  ## Remove all outputs of the build.
 	rm -rf ${BUILD_DIR} build.log tags
 
-upload:	${ELF}
-	avrdude -C/home/ttsiod/.arduino15/packages/arduino/tools/avrdude/6.3.0-arduino9/etc/avrdude.conf -v -pattiny85 -cstk500v1 -P/dev/ttyUSB0 -b19200 -Uflash:w:${HEX}:i
+upload:	${ELF} ## Upload to board
+	avrdude -C${USER_BASE}/packages/arduino/tools/avrdude/6.3.0-arduino9/etc/avrdude.conf -v -pattiny85 -cstk500v1 -P/dev/ttyUSB0 -b19200 -Uflash:w:${HEX}:i
 	avr-size ${ELF}
 
-stats:	${ELF}
+stats:	${ELF}  ## Show stats about the built binary
 	avr-nm --print-size -t d ${ELF} \
-	    | c++filt | sort -n -k 2 | awk '{a+=$$2; print a " " $$0;}' | grep -v u8x8
+	    | c++filt | sort -n -k 2 | awk '{a+=$$2; print a " " $$0;}' | grep -v u8x8 | tail -20
 	avr-size ${ELF}
+
+.PHONY: help clean stats
+
+help: ## Display this help section
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+.DEFAULT_GOAL := help
