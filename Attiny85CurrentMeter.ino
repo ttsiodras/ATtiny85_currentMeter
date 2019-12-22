@@ -70,37 +70,7 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(PB2, PB1, PB0);
 ////////////////////////////////
 #include <avr/sleep.h>
 
-//////////////////////////////////////////////////////////////
-// Optimizing for size...
-//////////////////////////////////////////////////////////////
-// I need to cleanup the msgBuf with spaces everytime I print,
-// to avoid having to cleanup the entire screen every time.
-//
-// Initially I just used my SAFE_PRINTF macro to emit a memset
-// followed by a drawString; but that meant I was wasting `.text`
-// space, of which the tiny brain of ATtiny85 has only 8K of...
-//
-// So instead of going full varargs, I used compile-time cpp-based
-// __VA_ARGS__, coupled with constructor/destructor semantics
-// that are re-using the same memset/drawString calls every time.
-// 2.7%  improvement in .text usage :-)
-struct Emiter {
-    static char msgBuf[32];
-    static int lineNo;
-
-    // Clear buffer with spaces
-    Emiter() { memset(msgBuf, ' ', sizeof(msgBuf)); }
-    // Draw string
-    ~Emiter() { u8x8.drawString(0, lineNo++, msgBuf); }
-};
-char Emiter::msgBuf[32] = {0};
-int Emiter::lineNo = 0;
-
-// Reserve one byte for the terminating NULL in the snprintf!
-#define SAFE_PRINTF(...) do { \
-    Emiter tmp; \
-    snprintf(Emiter::msgBuf, sizeof(Emiter::msgBuf)-1, __VA_ARGS__); \
-} while(0)
+#include "Emiter.h"
 
 ////////////////////////////////////////////////
 // The trickery with the 1.1V internal reference
@@ -141,12 +111,19 @@ int readVcc()
     return int(result); // Vcc in millivolts
 }
 
-int printVcc()
+int printVcc(Emiter& line)
 {
     int vcc = readVcc();
     int voltage1 = vcc / 1000;
     int voltage2 = vcc % 1000; // (((float)vcc / 1000) - voltage1) * 1000;
-    SAFE_PRINTF("VCC     %d.%03dV", voltage1, voltage2);
+    
+    line.reset();
+    line.printString("VCC      ");
+    line.printInt(voltage1);
+    line.printChar('.');
+    line.printInt(voltage2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+    line.printChar('V');
+    line.flush();
     return vcc;
 }
 
@@ -216,14 +193,22 @@ void loop()
     }
 
     Emiter::lineNo = 0; // Reset screen placement.
-    int vcc = printVcc();
+    Emiter line;
+    int vcc = printVcc(line);
 
     // vcc is in millivolts, ditto for v_ADC_average then:
     float v_ADC_average_f = float(vcc)*v_ADC_total/float(samples);
     int v_ADC_average = int(v_ADC_average_f + 0.5); // in millivolt
     int v1 = v_ADC_average / 1000;
     int v2 = v_ADC_average % 1000;
-    SAFE_PRINTF("V_SHUNT %d.%03dV", v1, v2);
+
+    line.reset();
+    line.printString("V_SHUNT  ");
+    line.printInt(v1);
+    line.printChar('.');
+    line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+    line.printChar('V');
+    line.flush();
 
     // Henceforth, in Volt:
     v_ADC_average_f /= 1000.0;
@@ -305,9 +290,20 @@ void loop()
     }
     v1 = currentAvg / 1000;
     v2 = currentAvg % 1000;
-    SAFE_PRINTF("CURRENT %d.%03dA", v1, v2);
-    SAFE_PRINTF("SAMPLES %d/%d", cnt, 100);
-    u8x8.refreshDisplay();
+
+    line.reset();
+    line.printString("CURRENT  ");
+    line.printInt(v1);
+    line.printChar('.');
+    line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+    line.printChar('A');
+    line.flush();
+
+    line.reset();
+    line.printString("SAMPLES ");
+    line.printInt(cnt, false /* unsigned */, true /* padded */, 3 /* padwidth */);
+    line.printString("/100");
+    line.flush();
 
     delay(250);
     if (cnt++ == 100) {

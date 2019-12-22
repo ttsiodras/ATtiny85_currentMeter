@@ -35,3 +35,9 @@ clean:
 upload:	all
 	avrdude -C/home/ttsiod/.arduino15/packages/arduino/tools/avrdude/6.3.0-arduino9/etc/avrdude.conf -v -pattiny85 -cstk500v1 -P/dev/ttyUSB0 -b19200 -Uflash:w:${HEX}:i
 	avr-size ${ELF}
+
+stats:
+	avr-nm --print-size -t d ${ELF} \
+	    | c++filt | sort -n -k 2 | awk '{a+=$$2; print a " " $$0;}' | grep -v u8x8
+	avr-size ${ELF}
+
