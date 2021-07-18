@@ -38,7 +38,7 @@
  *    and set to 115200 baud (see 'setup' below)
  *
  * 6. Finally, the I2C OLED display is connected to the SCL/PB2 and
- *    SDA/PB1 pins (i.e. pins 7 and 6).
+ *    SDA/PB0 pins (i.e. pins 7 and 5).
  */
 
 //////////////////////////////
@@ -49,23 +49,10 @@
 ///////////////
 // OLED related
 ///////////////
+#include "SSD1306_minimal.h"
 
-#include <U8x8lib.h>
-
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
-#ifdef U8X8_HAVE_HW_I2C
-#include <Wire.h>
-#endif
-
-// Initially I was using SDA and SCL pins; at some point I moved
-// the SDA to PB1 since I realized that (a) HW I2C doesn't work
-// in the ATtiny85, and (b) I wanted to use the EXTERNAL reference
-// for the voltage measurements. Turned out I didn't have to,
-// since I used the 1.1V internal reference trick (see getVcc).
-// ...but the choice of PB2 and PB1 (for SCL and SDA) remained.
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(PB2, PB1, PB0);
+// HW I2C via USI in the ATtiny85
+SSD1306_Mini oled;
 
 ////////////////////////////////
 // We will sleep in the end
@@ -138,12 +125,9 @@ void setup()
 {
     mySerial.begin(115200);
 
-    // Setup our screen and font (Go Alan Sugar, go!)
-    u8x8.begin();
-    u8x8.setFont(u8x8_font_amstrad_cpc_extended_u);
+    oled.init(0x3c);
+    oled.clear();
 
-    // Wake up screen...
-    u8x8.setPowerSave(false);
     // ...but prepare the CPU for a deep sleep (when sleep_cpu is called)
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 }
@@ -212,7 +196,7 @@ void loop()
 
     {
         Emiter line;
-        line.printString("V_SHUNT  ");
+        line.printString("V-SHUNT  ");
         line.printInt(v1);
         line.printChar('.');
         line.printInt(v2, false /* unsigned */, true /* padded */, 3 /* padwidth */);
@@ -317,15 +301,16 @@ void loop()
     }
 
     delay(250);
-    if (cnt++ == 5) {
+
+    if (cnt++ == 20) {
         int n = 9;
-        int sleepTenTimes = 10;
+        int sleepMultiplesOf8sec = 3;
 
         cnt = 0; // Reset for next time
 
         // Go to sleep - and wake up after 8x10 ~= 80 seconds.
-        u8x8.setPowerSave(true); // Lights off, OLED
-        while(sleepTenTimes--) {
+        oled.clear(); // Lights off, OLED
+        while(sleepMultiplesOf8sec--) {
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
             // Enable the watchdog timer, set at 8 seconds
             WDTCR = 1<<WDIE | (n & 0x8)<<2 | 1<<WDE | (n & 0x7);
@@ -335,7 +320,6 @@ void loop()
             // in total, sleep around 80 seconds
         }
         // Re-enable the screen, go do normal operatios
-        u8x8.setPowerSave(false);
     }
 }
 

@@ -70,7 +70,8 @@ Emiter::~Emiter()
     while(columnNo < sizeof(msgBuf))
         msgBuf[columnNo++] = ' ';
     msgBuf[sizeof(msgBuf)-1] = 0;
-    u8x8.drawString(0, lineNo++, msgBuf);
+    oled.cursorTo(0, lineNo++);
+    oled.printString(msgBuf);
     mySerial.println(msgBuf);
     columnNo = 0;
 }
