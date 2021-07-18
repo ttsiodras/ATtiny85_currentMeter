@@ -169,6 +169,14 @@ void loop()
     float v_ADC_total = 0.0, lower_bound, upper_bound;
     int i, currentAvg;
     static int cnt = 0;
+    static long previous_pass_millis = -1;
+
+    if (-1 == previous_pass_millis)
+        previous_pass_millis = millis();
+
+    if (millis()-previous_pass_millis < 1000)
+        return;
+    previous_pass_millis = millis();
 
     prepareNormalAdc();
     for(samples=0; samples<NO_SAMPLES; samples++) {
@@ -300,9 +308,7 @@ void loop()
         line.printString("/5");
     }
 
-    delay(250);
-
-    if (cnt++ == 20) {
+    if (cnt++ == 5) {
         int n = 9;
         int sleepMultiplesOf8sec = 3;
 
