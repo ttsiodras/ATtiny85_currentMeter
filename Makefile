@@ -23,6 +23,7 @@ WARNINGS:=-warnings all -logger human
 ARDUINO_BUILDER_OPTS=${HARDWARE} ${TOOLS} ${LIBRARIES}
 ARDUINO_BUILDER_OPTS+=-fqbn=${BOARD} ${WARNINGS}
 ARDUINO_BUILDER_OPTS+=-verbose -build-path ${BUILD_DIR} 
+# ARDUINO_BUILDER_OPTS+=-prefs=build.extra_flags=-save-temps
 
 binary:	${ELF}  ## Build the binary.
 
