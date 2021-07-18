@@ -38,7 +38,11 @@
  *    and set to 115200 baud (see 'setup' below)
  *
  * 6. Finally, the I2C OLED display is connected to the SCL/PB2 and
- *    SDA/PB0 pins (i.e. pins 7 and 5).
+ *    SDA/PB0 pins (i.e. pins 7 and 5). PB1 is connected via a 2.2K
+ *    resistor to the base (pin 2) of a 2N3904, whose collector 
+ *    (pin 3) goes to the OLED ground, and emitter (pin 1) goes 
+ *    to the real GND. PB1 is the used to completely power off
+ *    the OLED during sleep (below 0ms total power use).
  */
 
 //////////////////////////////
@@ -125,6 +129,9 @@ void setup()
 {
     mySerial.begin(115200);
 
+    pinMode(PB1, OUTPUT);
+    digitalWrite(PB1, HIGH);
+    delay(250);
     oled.init(0x3c);
     oled.clear();
 
@@ -316,6 +323,7 @@ void loop()
 
         // Go to sleep - and wake up after 8x10 ~= 80 seconds.
         oled.clear(); // Lights off, OLED
+        digitalWrite(PB1, LOW);
         while(sleepMultiplesOf8sec--) {
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
             // Enable the watchdog timer, set at 8 seconds
@@ -326,6 +334,10 @@ void loop()
             // in total, sleep around 80 seconds
         }
         // Re-enable the screen, go do normal operatios
+        digitalWrite(PB1, HIGH);
+        delay(250);
+        oled.init(0x3c);
+        oled.clear();
     }
 }
 

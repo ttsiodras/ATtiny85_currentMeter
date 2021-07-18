@@ -12,7 +12,7 @@ BASE:=/usr/share/arduino
 USER_BASE:=$(HOME)/.arduino15
 USER_LIBS:=$(HOME)/Arduino/libraries
 # BOARD:=attiny:avr:ATtinyX5:cpu=attiny85,clock=internal8
-BOARD:=ATTinyCore:avr:attinyx5:LTO=enable,TimerClockSource=default,chip=85,clock=8internal,eesave=aenable,bod=disable,millis=enabled
+BOARD:=ATTinyCore:avr:attinyx5:LTO=enable,TimerClockSource=default,chip=85,clock=1internal,eesave=aenable,bod=disable,millis=enabled
 # -vid-pid=1A86_7523
 HARDWARE:=-hardware ${BASE}/hardware -hardware ${USER_BASE}/packages 
 TOOLS:=-tools ${BASE}/tools-builder -tools ${USER_BASE}/packages
