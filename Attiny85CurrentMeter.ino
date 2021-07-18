@@ -310,7 +310,7 @@ void loop()
 
     if (cnt++ == 5) {
         int n = 9;
-        int sleepMultiplesOf8sec = 3;
+        int sleepMultiplesOf8sec = 10;
 
         cnt = 0; // Reset for next time
 
